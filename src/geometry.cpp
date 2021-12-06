@@ -4,10 +4,17 @@
  * 
  */
 
-#include "geometry.hpp"
 #include <vector>
 #include <iostream>
 
+/**
+*  @brief Structure for a vertex position/normal combination.
+* 
+*/
+struct VertexNormal {
+    float vertex[3];
+    float normal[3];
+};
 
 /**
  * @brief Common superclass for geometry objects.
@@ -33,21 +40,27 @@ class Block : Geometry {
         float h; // height
         float d; // depth
 
-        VertexNormal * const mesh[36] = (VertexNormal * const)nullptr;
+        VertexNormal * mesh;
 
     public:
         Block() {
             this->w = 5.0f;
             this->h = 5.0f;
             this->d = 5.0f;
-            this->UpdateGeometry();
+            mesh = (VertexNormal*)malloc(36 * sizeof(VertexNormal));
+            UpdateGeometry();
         }
 
         Block(float w, float h, float d) {
             this->w = w;
             this->h = h;
             this->d = d;
-            this->UpdateGeometry();
+            mesh = (VertexNormal*)malloc(36 * sizeof(VertexNormal));
+            UpdateGeometry();
+        }
+
+        ~Block() {
+            free(mesh);
         }
 
     void UpdateGeometry() {
@@ -69,57 +82,59 @@ class Block : Geometry {
 
         */
 
-        std::vector<VertexNormal> v = {
+        VertexNormal v[36] = {
             // front face
-            (struct VertexNormal){{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
-            (struct VertexNormal){{ this->w,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
-            (struct VertexNormal){{ this->w,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
-            (struct VertexNormal){{ this->w,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
-            (struct VertexNormal){{ 0.f    ,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
-            (struct VertexNormal){{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+            {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+            {{ this->w,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+            {{ this->w,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
+            {{ this->w,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
+            {{ 0.f    ,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
+            {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
             // right face
-            (struct VertexNormal){{ this->w,  0.f    , 0.f    }, { 1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ this->w,  0.f    ,-this->d}, { 1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ this->w,  this->h,-this->d}, { 1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ this->w,  this->h,-this->d}, { 1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ this->w,  this->h, 0.f    }, { 1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ this->w,  0.f    , 0.f    }, { 1.f,  0.f,  0.f}},
+            {{ this->w,  0.f    , 0.f    }, { 1.f,  0.f,  0.f}},
+            {{ this->w,  0.f    ,-this->d}, { 1.f,  0.f,  0.f}},
+            {{ this->w,  this->h,-this->d}, { 1.f,  0.f,  0.f}},
+            {{ this->w,  this->h,-this->d}, { 1.f,  0.f,  0.f}},
+            {{ this->w,  this->h, 0.f    }, { 1.f,  0.f,  0.f}},
+            {{ this->w,  0.f    , 0.f    }, { 1.f,  0.f,  0.f}},
             // back face
-            (struct VertexNormal){{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ 0.f    ,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ 0.f    ,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ this->w,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ 0.f    ,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ 0.f    ,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ this->w,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
             // left face
-            (struct VertexNormal){{ 0.f    ,  0.f    ,-this->d}, {-1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ 0.f    ,  0.f    , 0.f    }, {-1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ 0.f    ,  this->h, 0.f    }, {-1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ 0.f    ,  this->h, 0.f    }, {-1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ 0.f    ,  this->h,-this->d}, {-1.f,  0.f,  0.f}},
-            (struct VertexNormal){{ 0.f    ,  0.f    ,-this->d}, {-1.f,  0.f,  0.f}},
+            {{ 0.f    ,  0.f    ,-this->d}, {-1.f,  0.f,  0.f}},
+            {{ 0.f    ,  0.f    , 0.f    }, {-1.f,  0.f,  0.f}},
+            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  0.f,  0.f}},
+            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  0.f,  0.f}},
+            {{ 0.f    ,  this->h,-this->d}, {-1.f,  0.f,  0.f}},
+            {{ 0.f    ,  0.f    ,-this->d}, {-1.f,  0.f,  0.f}},
             // top face
-            (struct VertexNormal){{ 0.f    ,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
-            (struct VertexNormal){{ this->w,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
-            (struct VertexNormal){{ this->w,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
-            (struct VertexNormal){{ this->w,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
-            (struct VertexNormal){{ 0.f    ,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
-            (struct VertexNormal){{ 0.f    ,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
+            {{ 0.f    ,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
+            {{ this->w,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
+            {{ this->w,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
+            {{ this->w,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
+            {{ 0.f    ,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
+            {{ 0.f    ,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
             // bot face
-            (struct VertexNormal){{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ this->w,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ this->w,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
-            (struct VertexNormal){{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}}
+            {{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ this->w,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
+            {{ this->w,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
+            {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
+            {{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}}
         };
 
-        this->mesh = v;
+        memcpy(mesh, v, 36 * sizeof(VertexNormal));
     }
 
-    std::vector<VertexNormal> *GetGeometry() {
+    VertexNormal * const GetGeometry() {
         return this->mesh;
     }
+
+    void GetFloatArray() {}
 
     void PrintSize() {
         std::cout << "w: " << this->w << std::endl;
@@ -129,11 +144,47 @@ class Block : Geometry {
 
 };
 
-int main(int argc, char *argv[]) {
-
-    Block b = Block();
-
-    b.PrintSize();
-
-    std::cout << "Hello world?" << std::endl;
-}
+struct VertexNormal const constblock[36] = {
+    // front face
+    {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+    {{ 1.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+    {{ 1.f    ,  1.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+    {{ 1.f    ,  1.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+    {{ 0.f    ,  1.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+    {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+    // right face
+    {{ 1.f    ,  0.f    , 0.f    }, { 1.f,  0.f,  0.f}},
+    {{ 1.f    ,  0.f    ,-1.f    }, { 1.f,  0.f,  0.f}},
+    {{ 1.f    ,  1.f    ,-1.f    }, { 1.f,  0.f,  0.f}},
+    {{ 1.f    ,  1.f    ,-1.f    }, { 1.f,  0.f,  0.f}},
+    {{ 1.f    ,  1.f    , 0.f    }, { 1.f,  0.f,  0.f}},
+    {{ 1.f    ,  0.f    , 0.f    }, { 1.f,  0.f,  0.f}},
+    // back face
+    {{ 1.f    ,  0.f    ,-1.f    }, { 0.f,  0.f, -1.f}},
+    {{ 0.f    ,  0.f    ,-1.f    }, { 0.f,  0.f, -1.f}},
+    {{ 0.f    ,  1.f    ,-1.f    }, { 0.f,  0.f, -1.f}},
+    {{ 0.f    ,  1.f    ,-1.f    }, { 0.f,  0.f, -1.f}},
+    {{ 1.f    ,  1.f    ,-1.f    }, { 0.f,  0.f, -1.f}},
+    {{ 1.f    ,  0.f    ,-1.f    }, { 0.f,  0.f, -1.f}},
+    // left face
+    {{ 0.f    ,  0.f    ,-1.f    }, {-1.f,  0.f,  0.f}},
+    {{ 0.f    ,  0.f    , 0.f    }, {-1.f,  0.f,  0.f}},
+    {{ 0.f    ,  1.f    , 0.f    }, {-1.f,  0.f,  0.f}},
+    {{ 0.f    ,  1.f    , 0.f    }, {-1.f,  0.f,  0.f}},
+    {{ 0.f    ,  1.f    ,-1.f    }, {-1.f,  0.f,  0.f}},
+    {{ 0.f    ,  0.f    ,-1.f    }, {-1.f,  0.f,  0.f}},
+    // top face
+    {{ 0.f    ,  1.f    , 0.f    }, { 0.f,  1.f,  0.f}},
+    {{ 1.f    ,  1.f    , 0.f    }, { 0.f,  1.f,  0.f}},
+    {{ 1.f    ,  1.f    ,-1.f    }, { 0.f,  1.f,  0.f}},
+    {{ 1.f    ,  1.f    ,-1.f    }, { 0.f,  1.f,  0.f}},
+    {{ 0.f    ,  1.f    ,-1.f    }, { 0.f,  1.f,  0.f}},
+    {{ 0.f    ,  1.f    , 0.f    }, { 0.f,  1.f,  0.f}},
+    // bot face
+    {{ 0.f    ,  0.f    ,-1.f    }, { 0.f,  0.f, -1.f}},
+    {{ 1.f    ,  0.f    ,-1.f    }, { 0.f,  0.f, -1.f}},
+    {{ 1.f    ,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
+    {{ 1.f    ,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
+    {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
+    {{ 0.f    ,  0.f    ,-1.f    }, { 0.f,  0.f, -1.f}}
+};
