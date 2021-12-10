@@ -10,6 +10,8 @@
 #include <GLFW/glfw3.h>
 #include <GLM/glm.hpp>
 #include <GLM/gtc/type_ptr.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <STB/stb_image.h>
 
 // standard C++ libraries
 #include <iostream>
@@ -19,6 +21,7 @@
 #include "geometry.hpp"
 #include "shaders.cpp"
 #include "camera.cpp"
+#include "oglobj.cpp"
 
 // window size
 #define WIDTH 800
@@ -131,11 +134,13 @@ int main(void)
         return -1;
     }
 
-    /* Make the window's context current */
+    // select context
     glfwMakeContextCurrent(window);
+    // synchronize refresh rates
     glfwSwapInterval(1);
 
 
+    // attempt to initialize GLEW
     auto err = glewInit();
 
     if (err != GLEW_OK) {
@@ -144,26 +149,22 @@ int main(void)
     }
 
 
+
 #ifdef _DEBUG
     std::cout << glGetString(GL_VERSION) << std::endl;
 #endif
 
 
-    // generate data for displaying image
+    // data for displaying image
     Block* block = new Block(1.f, 1.f, 1.f);
 
-    VertexNormal* data = block->GetGeometry();
-
-    std::cerr << data[0].normal[0] << std::endl;
-    std::cerr << data[0].normal[1] << std::endl;
-    std::cerr << data[0].normal[2] << std::endl;
-
+    // create vertex buffer objects for base program
     unsigned int vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, 36 * 6 * sizeof(float), data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, block->GeometrySize(), block->GetGeometry(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)12);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE , 6 * sizeof(float), (void*)12);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
@@ -173,37 +174,63 @@ int main(void)
         createShader(GL_FRAGMENT_SHADER, basicFS),
         });
 
-    GLuint cel_program = createProgram({
-        createShader(GL_VERTEX_SHADER, celVS),
-        createShader(GL_FRAGMENT_SHADER, basicFS),
+
+    // create SKYBOX program
+    GLuint sb_prg = createProgram({
+        createShader(GL_VERTEX_SHADER, skyboxVS),
+        createShader(GL_FRAGMENT_SHADER, skyboxFS),
         });
+    unsigned int vbo_sb;
+    glGenBuffers(1, &vbo_sb);
+
+    GLuint offsetUniform = glGetUniformLocation(sb_prg, "offset");
+    GLuint zoomXUniform  = glGetUniformLocation(sb_prg, "xZoom" );
+    GLuint zoomYUniform  = glGetUniformLocation(sb_prg, "yZoom" );
+
+    // create skybox texture
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("textures/skybox_mini.png", &width, &height, &nrChannels, 0);
+    if (!data) {
+        std::cerr << "Failed to load texture!" << std::endl;
+    }
+    else {
+        std::cerr << nrChannels << std::endl;
+    }
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
 
     // create camera instance -- NORMAL SHADER
     Camera* camera = new Camera;
 
     CameraData cdata = camera->GetData();
-    cdata.x = 3.f; cdata.y = 1.f; cdata.z = -3.f;
+    cdata.x = 3.f; cdata.y = 1.1f; cdata.z = -3.f;
     camera->SetData(cdata);
 
     GLuint viewUniform = glGetUniformLocation(program, "u_view");
     GLuint projUniform = glGetUniformLocation(program, "u_proj");
+    GLuint celsUniform = glGetUniformLocation(program, "u_cels");
 
     auto viewM = glm::lookAt(glm::vec3(cdata.x, cdata.y, cdata.z), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f));
 
     glProgramUniformMatrix4fv(program, viewUniform, 1, GL_FALSE, glm::value_ptr(viewM));
     glProgramUniformMatrix4fv(program, projUniform, 1, GL_FALSE, glm::value_ptr(ComputeProjMatrix(camera->GetData())));
+    glProgramUniform1i(program, celsUniform, 0);
     
-    // CEL SHADER SETUP
-    GLuint cel_viewUniform = glGetUniformLocation(cel_program, "u_view");
-    GLuint cel_projUniform = glGetUniformLocation(cel_program, "u_proj");
-
-    glProgramUniformMatrix4fv(cel_program, cel_viewUniform, 1, GL_FALSE, glm::value_ptr(viewM));
-    glProgramUniformMatrix4fv(cel_program, cel_projUniform, 1, GL_FALSE, glm::value_ptr(ComputeProjMatrix(camera->GetData())));
-
 
 
     float angle = 0;
-    float inc = 0.04f;
+    float inc = 0.02f;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -212,22 +239,39 @@ int main(void)
         cdata.x = 3 * glm::sin(angle);
         cdata.z = 3 * glm::cos(angle);
         angle += inc;
+        if (angle >= 2 * glm::pi<float>()) angle = 0;
 
-        auto viewM = glm::lookAt(glm::vec3(cdata.x, cdata.y, cdata.z), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f));
+        auto viewM = glm::lookAt(glm::vec3(cdata.x-0.1f, cdata.y, cdata.z-0.1f), glm::vec3(-0.1f, 0.f, -0.1f), glm::vec3(0.f, 1.f, 0.f));
 
         glProgramUniformMatrix4fv(program, viewUniform, 1, GL_FALSE, glm::value_ptr(viewM));
-        glProgramUniformMatrix4fv(cel_program, cel_viewUniform, 1, GL_FALSE, glm::value_ptr(viewM));
 
 
         /* Render here */
         glClearColor(0.7, 0.7, 0.7, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
+        
+        // skybox render
+        glBindVertexArray(vbo_sb);
+        glUseProgram(sb_prg);
 
-        glBindVertexArray(vbo);
+        glProgramUniform1f(sb_prg, offsetUniform, -0.5f * angle/glm::pi<float>());
+        glProgramUniform1f(sb_prg, zoomXUniform, 0.7f);
+        glProgramUniform1f(sb_prg, zoomYUniform, 0.7f);
+
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        
+        glClear(GL_DEPTH_BUFFER_BIT);
 
         // outline render
-        glUseProgram(cel_program);
+
+        glBindVertexArray(vbo);
+        glUseProgram(program);
+
+        
+        glProgramUniform1i(program, celsUniform, 1);
+
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -235,7 +279,9 @@ int main(void)
 
 
         // normal render
-        glUseProgram(program);
+
+        glProgramUniform1i(program, celsUniform, 0);
+
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glBindVertexArray(0);

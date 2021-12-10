@@ -7,6 +7,7 @@
 #include <vector>
 #include <iostream>
 
+
 /**
 *  @brief Structure for a vertex position/normal combination.
 * 
@@ -16,6 +17,18 @@ struct VertexNormal {
     float normal[3];
 };
 
+
+/**
+*  @brief Structure for a single triangle vertex normals and a combined face normal.
+* 
+*/
+struct FaceTriangle {
+    VertexNormal    vn[3];
+    float           faceNormal[3];
+};
+
+
+
 /**
  * @brief Common superclass for geometry objects.
  *
@@ -23,9 +36,24 @@ struct VertexNormal {
 
 class Geometry {
 
+    /**
+    *  @brief Returns an array of VertexNormal structures.
+    *  
+    * 
+    */
     std::vector<VertexNormal> *GetGeometry() {
-        std::cerr << "ERROR: Pulling geometry from unspecified object." << std::endl;
+        std::cerr << "ERROR: Function GetGeometry() unspecified for this class." << std::endl;
         return nullptr;
+    }
+
+    /**
+    *  @brief Return size of Geometry array in bytes.
+    * 
+    * 
+    */
+    unsigned int GeometrySize() {
+        std::cerr << "ERROR: Function GeometrySize() unspecified for this class." << std::endl;
+        return 0;
     }
 
 };
@@ -84,47 +112,47 @@ class Block : Geometry {
 
         VertexNormal v[36] = {
             // front face
-            {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
-            {{ this->w,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
-            {{ this->w,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
-            {{ this->w,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
-            {{ 0.f    ,  this->h, 0.f    }, { 0.f,  0.f,  1.f}},
-            {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f,  1.f}},
+            {{ 0.f    ,  0.f    , 0.f    }, {-1.f, -1.f,  1.f}},
+            {{ this->w,  0.f    , 0.f    }, { 1.f, -1.f,  1.f}},
+            {{ this->w,  this->h, 0.f    }, { 1.f,  1.f,  1.f}},
+            {{ this->w,  this->h, 0.f    }, { 1.f,  1.f,  1.f}},
+            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  1.f,  1.f}},
+            {{ 0.f    ,  0.f    , 0.f    }, {-1.f, -1.f,  1.f}},
             // right face
-            {{ this->w,  0.f    , 0.f    }, { 1.f,  0.f,  0.f}},
-            {{ this->w,  0.f    ,-this->d}, { 1.f,  0.f,  0.f}},
-            {{ this->w,  this->h,-this->d}, { 1.f,  0.f,  0.f}},
-            {{ this->w,  this->h,-this->d}, { 1.f,  0.f,  0.f}},
-            {{ this->w,  this->h, 0.f    }, { 1.f,  0.f,  0.f}},
-            {{ this->w,  0.f    , 0.f    }, { 1.f,  0.f,  0.f}},
+            {{ this->w,  0.f    , 0.f    }, { 1.f, -1.f,  1.f}},
+            {{ this->w,  0.f    ,-this->d}, { 1.f, -1.f, -1.f}},
+            {{ this->w,  this->h,-this->d}, { 1.f,  1.f, -1.f}},
+            {{ this->w,  this->h,-this->d}, { 1.f,  1.f, -1.f}},
+            {{ this->w,  this->h, 0.f    }, { 1.f,  1.f,  1.f}},
+            {{ this->w,  0.f    , 0.f    }, { 1.f, -1.f,  1.f}},
             // back face
-            {{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
-            {{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
-            {{ 0.f    ,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
-            {{ 0.f    ,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
-            {{ this->w,  this->h,-this->d}, { 0.f,  0.f, -1.f}},
-            {{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
+            {{ this->w,  0.f    ,-this->d}, { 1.f, -1.f, -1.f}},
+            {{ 0.f    ,  0.f    ,-this->d}, {-1.f, -1.f, -1.f}},
+            {{ 0.f    ,  this->h,-this->d}, {-1.f,  1.f, -1.f}},
+            {{ 0.f    ,  this->h,-this->d}, {-1.f,  1.f, -1.f}},
+            {{ this->w,  this->h,-this->d}, { 1.f,  1.f, -1.f}},
+            {{ this->w,  0.f    ,-this->d}, { 1.f, -1.f, -1.f}},
             // left face
-            {{ 0.f    ,  0.f    ,-this->d}, {-1.f,  0.f,  0.f}},
-            {{ 0.f    ,  0.f    , 0.f    }, {-1.f,  0.f,  0.f}},
-            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  0.f,  0.f}},
-            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  0.f,  0.f}},
-            {{ 0.f    ,  this->h,-this->d}, {-1.f,  0.f,  0.f}},
-            {{ 0.f    ,  0.f    ,-this->d}, {-1.f,  0.f,  0.f}},
+            {{ 0.f    ,  0.f    ,-this->d}, {-1.f, -1.f, -1.f}},
+            {{ 0.f    ,  0.f    , 0.f    }, {-1.f, -1.f,  1.f}},
+            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  1.f,  1.f}},
+            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  1.f,  1.f}},
+            {{ 0.f    ,  this->h,-this->d}, {-1.f,  1.f, -1.f}},
+            {{ 0.f    ,  0.f    ,-this->d}, {-1.f, -1.f, -1.f}},
             // top face
-            {{ 0.f    ,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
-            {{ this->w,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
-            {{ this->w,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
-            {{ this->w,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
-            {{ 0.f    ,  this->h,-this->d}, { 0.f,  1.f,  0.f}},
-            {{ 0.f    ,  this->h, 0.f    }, { 0.f,  1.f,  0.f}},
+            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  1.f,  1.f}},
+            {{ this->w,  this->h, 0.f    }, { 1.f,  1.f,  1.f}},
+            {{ this->w,  this->h,-this->d}, { 1.f,  1.f, -1.f}},
+            {{ this->w,  this->h,-this->d}, { 1.f,  1.f, -1.f}},
+            {{ 0.f    ,  this->h,-this->d}, {-1.f,  1.f, -1.f}},
+            {{ 0.f    ,  this->h, 0.f    }, {-1.f,  1.f,  1.f}},
             // bot face
-            {{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
-            {{ this->w,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}},
-            {{ this->w,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
-            {{ this->w,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
-            {{ 0.f    ,  0.f    , 0.f    }, { 0.f,  0.f, -1.f}},
-            {{ 0.f    ,  0.f    ,-this->d}, { 0.f,  0.f, -1.f}}
+            {{ 0.f    ,  0.f    ,-this->d}, {-1.f, -1.f, -1.f}},
+            {{ this->w,  0.f    ,-this->d}, { 1.f, -1.f, -1.f}},
+            {{ this->w,  0.f    , 0.f    }, { 1.f, -1.f,  1.f}},
+            {{ this->w,  0.f    , 0.f    }, { 1.f, -1.f,  1.f}},
+            {{ 0.f    ,  0.f    , 0.f    }, {-1.f, -1.f,  1.f}},
+            {{ 0.f    ,  0.f    ,-this->d}, {-1.f, -1.f, -1.f}}
         };
 
         memcpy(mesh, v, 36 * sizeof(VertexNormal));
@@ -134,7 +162,9 @@ class Block : Geometry {
         return this->mesh;
     }
 
-    void GetFloatArray() {}
+    unsigned int GeometrySize() {
+        return 36 * 6 * sizeof(float);
+    }
 
     void PrintSize() {
         std::cout << "w: " << this->w << std::endl;
